@@ -1,0 +1,7 @@
+1.install radis from officel web site in windows or mac and celery throgh pip
+2. add config celery  in settings file
+3.create a celery file
+3. creaate the task file
+4.in side pymonitor run >celery -A performance beat -l info
+5.in side pymonitor run >celery -A performance worker -l info
+
