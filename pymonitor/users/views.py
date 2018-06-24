@@ -34,5 +34,3 @@ class UserViewSet(viewsets.ModelViewSet, UserController):
     def destroy(self, request, pk=None):
         return HttpResponse(self.user_delete(request, pk))
 
-# def test:
-#     pass
