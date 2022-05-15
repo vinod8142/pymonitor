@@ -4,6 +4,11 @@ stges{
 
 stage("build"){
 steps{
+when {
+expression{
+branch "dev"
+}
+}
 echo "something build"
 }
 }
