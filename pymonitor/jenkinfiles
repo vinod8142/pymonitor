@@ -9,7 +9,7 @@ expression{
 branch "dev"
 }
 }
-echo "something build"
+echo "something build "
 }
 }
 stage("test"){
