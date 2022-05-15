@@ -6,7 +6,7 @@ stages{
 
 stage("build"){
   when {
-                branch "release-*"
+                changelog ".*Test.*"
             }
 steps{
 echo "something build"
