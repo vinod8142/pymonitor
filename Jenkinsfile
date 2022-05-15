@@ -6,7 +6,7 @@ stages{
 
 stage("build"){
   when {
-                changelog ".*Test.*"
+                changelog ".*test.*"
             }
 steps{
 echo "something build"
