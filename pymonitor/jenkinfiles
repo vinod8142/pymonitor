@@ -17,7 +17,7 @@ steps{
 echo "something test"
 }
 }
-stage("deploy"){
+stage("deploydd"){
 steps{
 echo "something deploy"
 }
