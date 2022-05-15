@@ -2,7 +2,7 @@ pipeline{
 
 agent any
 
-stges{
+stages{
 
 stage("build"){
 steps{
