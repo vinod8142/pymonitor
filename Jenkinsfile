@@ -1,12 +1,15 @@
 pipeline{
-
 agent any
+  
+    environment {
+        ENV = "testing"
+    }
 
 stages{
 
 stage("build"){
   when {
-                changelog ".*test.*"
+                environment(name: "ENV", value: "testing")
             }
 steps{
 echo "something build"
