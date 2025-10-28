@@ -79,11 +79,39 @@ jobs:
           git push origin "${{ steps.version.outputs.version }}"
           echo "✅ Tag created and pushed test: ${{ steps.version.outputs.version }}"
 
+      - name: Generate Custom Release Notes
+        id: generate_notes
+        run: |
+          # Create custom release notes
+          NOTES=$(cat << EOF
+          # 🎉 Release $(date +'%Y-%m-%d')
+          
+          ## 📊 Summary
+          **$(git log --oneline ${{ github.sha }} | wc -l)** commits in this release
+          
+          ## 🚀 Key Changes
+          $(git log --oneline --pretty=format:"- %s" -20 | grep -E "^(feat|feature):" | head -5 | sed 's/^feat:/• **New:**/g' | sed 's/^feature:/• **New:**/g')
+          
+          ## 🐛 Fixes
+          $(git log --oneline --pretty=format:"- %s" -20 | grep -E "^(fix|bugfix):" | head -5 | sed 's/^fix:/• **Fixed:**/g' | sed 's/^bugfix:/• **Fixed:**/g')
+          
+          ## 📝 Other Improvements
+          $(git log --oneline --pretty=format:"- %s" -20 | grep -v -E "^(feat|feature|fix|bugfix):" | head -10 | sed 's/^/- /g')
+          
+          ---
+          *Auto-generated from commit history*
+          EOF
+          )
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.version.outputs.version }}
           name: Release ${{ steps.version.outputs.version }}
+          body: ${{ steps.generate_notes.outputs.notes }}
           generate_release_notes: true
           draft: false
           prerelease: false
