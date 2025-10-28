@@ -40,12 +40,17 @@ jobs:
           echo "$NOTES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
+      # ✅ Generate tag dynamically so it's valid
+      - name: Generate tag
+        id: tag
+        run: echo "TAG_NAME=release-$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_ENV
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: release-$(date +%Y%m%d-%H%M%S)
-          name: Release $(date +'%Y-%m-%d %H:%M')
+          tag_name: ${{ env.TAG_NAME }}
+          name: "Release ${{ env.TAG_NAME }}"
           body: ${{ steps.generate_notes.outputs.notes }}
-          generate_release_notes: false
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
