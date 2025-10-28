@@ -1,4 +1,4 @@
-name: Auto Tag on PR Merge
+name: Auto Tag and Release on PR Merge
 
 on:
   pull_request:
@@ -6,15 +6,21 @@ on:
     branches: [ master ]
 
 jobs:
-  tag:
+  tag-and-release:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0  # Get full history including tags
+
+      - name: Debug Info
+        run: |
+          echo "🔄 PR Merge triggered this workflow"
+          echo "📝 PR Title: ${{ github.event.pull_request.title }}"
+          echo "👤 Merged by: ${{ github.event.pull_request.merged_by.login }}"
 
       - name: Auto Version
         id: version
@@ -62,9 +68,30 @@ jobs:
           echo "Final version: $NEW_VERSION"
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Create Tag
+      - name: Create Git Tag
         run: |
           git config user.email "action@github.com"
           git config user.name "GitHub Action"
           git tag ${{ steps.version.outputs.version }}
           git push origin ${{ steps.version.outputs.version }}
+          echo "✅ Tag created: ${{ steps.version.outputs.version }}"
+
+      - name: List existing tags
+        run: git tag -l
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify Release Created
+        run: |
+          echo "🎉 Release created successfully!"
+          echo "🏷️ Tag: ${{ steps.version.outputs.version }}"
+          echo "📦 Check your GitHub Releases page"
