@@ -42,3 +42,5 @@ jobs:
           git config user.name "GitHub Action"
           git tag ${{ steps.version.outputs.version }}
           git push origin ${{ steps.version.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
