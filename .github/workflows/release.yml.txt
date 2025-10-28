@@ -1,0 +1,36 @@
+name: Test Release Notes
+
+on:
+  push:
+    branches: 
+      - master  # Replace with your actual branch name
+
+jobs:
+  test-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Generate Release Notes (Dry Run)
+        id: generate-notes
+        run: |
+          # Simulate what GitHub would generate
+          echo "## Test Release Notes"
+          echo "### This is a test run on branch: ${{ github.ref }}"
+          echo "### Commit: ${{ github.sha }}"
+          echo "---"
+          echo "### Changes since last release:"
+          git log --oneline -10 --pretty=format:"- %s" || echo "No git history available"
+          echo ""
+          echo "**This is a test - no actual release was created**"
+          
+      - name: Upload Release Notes as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-release-notes
+          path: |
+            release-notes.md
+          retention-days: 1
