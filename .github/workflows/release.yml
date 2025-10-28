@@ -1,57 +1,39 @@
-name: Create Release with Custom Notes
+name: Create Release
 
 on:
   push:
     tags:
-      - 'v*'  # ✅ Trigger when auto-tag workflow creates v1.0.0, v1.0.1, etc.
+      - 'v*'
 
 jobs:
   create-release:
     runs-on: ubuntu-latest
     steps:
+      - name: Debug Info
+        run: |
+          echo "🔄 Workflow triggered by tag: ${{ github.ref_name }}"
+          echo "📝 SHA: ${{ github.sha }}"
+          echo "🏷️ Ref: ${{ github.ref }}"
+          
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           
-      - name: Generate Custom Release Notes
-        id: generate_notes
-        run: |
-          # Create custom release notes
-          NOTES=$(cat << EOF
-          # 🎉 Release $(date +'%Y-%m-%d')
+      - name: List existing tags
+        run: git tag -l
           
-          ## 📊 Summary
-          **$(git log --oneline ${{ github.sha }} | wc -l)** commits in this release
-          
-          ## 🚀 Key Changes
-          $(git log --oneline --pretty=format:"- %s" -20 | grep -E "^(feat|feature):" | head -5 | sed 's/^feat:/• **New:**/g' | sed 's/^feature:/• **New:**/g')
-          
-          ## 🐛 Fixes
-          $(git log --oneline --pretty=format:"- %s" -20 | grep -E "^(fix|bugfix):" | head -5 | sed 's/^fix:/• **Fixed:**/g' | sed 's/^bugfix:/• **Fixed:**/g')
-          
-          ## 📝 Other Improvements
-          $(git log --oneline --pretty=format:"- %s" -20 | grep -v -E "^(feat|feature|fix|bugfix):" | head -10 | sed 's/^/- /g')
-          
-          ---
-          *Auto-generated from commit history*
-          EOF
-          )
-          echo "notes<<EOF" >> $GITHUB_OUTPUT
-          echo "$NOTES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      # ✅ Generate tag dynamically so it's valid
-      - name: Generate tag
-        id: tag
-        run: echo "TAG_NAME=release-$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_ENV
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ env.TAG_NAME }}
-          name: "Release ${{ env.TAG_NAME }}"
-          body: ${{ steps.generate_notes.outputs.notes }}
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
           generate_release_notes: true
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Verify Release Created
+        run: |
+          echo "✅ If no errors above, release should be created!"
