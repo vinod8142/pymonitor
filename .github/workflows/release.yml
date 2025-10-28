@@ -1,8 +1,8 @@
-name: Create Release on Master Push
+name: Create Release with Custom Notes
 
 on:
   push:
-    branches: [ master ]  # Triggers on push to master branch
+    branches: [ master ]
 
 jobs:
   create-release:
@@ -13,24 +13,39 @@ jobs:
         with:
           fetch-depth: 0
           
-      - name: Get version from package.json
-        id: version
+      - name: Generate Custom Release Notes
+        id: generate_notes
         run: |
-          if [ -f "package.json" ]; then
-            VERSION=$(node -p "require('./package.json').version")
-          else
-            # Use date-based version if no package.json
-            VERSION=$(date +'%Y.%m.%d.%H%M%S')
-          fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          # Create custom release notes
+          NOTES=$(cat << EOF
+          # 🎉 Release $(date +'%Y-%m-%d')
+          
+          ## 📊 Summary
+          **$(git log --oneline ${{ github.sha }} | wc -l)** commits in this release
+          
+          ## 🚀 Key Changes
+          $(git log --oneline --pretty=format:"- %s" -20 | grep -E "^(feat|feature):" | head -5 | sed 's/^feat:/• **New:**/g' | sed 's/^feature:/• **New:**/g')
+          
+          ## 🐛 Fixes
+          $(git log --oneline --pretty=format:"- %s" -20 | grep -E "^(fix|bugfix):" | head -5 | sed 's/^fix:/• **Fixed:**/g' | sed 's/^bugfix:/• **Fixed:**/g')
+          
+          ## 📝 Other Improvements
+          $(git log --oneline --pretty=format:"- %s" -20 | grep -v -E "^(feat|feature|fix|bugfix):" | head -10 | sed 's/^/- /g')
+          
+          ---
+          *Auto-generated from commit history*
+          EOF
+          )
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ steps.version.outputs.version }}
-          name: Release v${{ steps.version.outputs.version }}
-          generate_release_notes: true  # Auto-generate from commits
-          draft: false
-          prerelease: false
+          tag_name: release-$(date +%Y%m%d-%H%M%S)
+          name: Release $(date +'%Y-%m-%d %H:%M')
+          body: ${{ steps.generate_notes.outputs.notes }}
+          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
