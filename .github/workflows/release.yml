@@ -27,10 +27,4 @@ jobs:
           echo ""
           echo "**This is a test - no actual release was created**"
           
-      - name: Upload Release Notes as Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: generated-release-notes
-          path: |
-            release-notes.md
-          retention-days: 1
+     
