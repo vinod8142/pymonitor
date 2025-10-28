@@ -77,7 +77,7 @@ jobs:
           # Create and push tag
           git tag "${{ steps.version.outputs.version }}"
           git push origin "${{ steps.version.outputs.version }}"
-          echo "✅ Tag created and pushed: ${{ steps.version.outputs.version }}"
+          echo "✅ Tag created and pushed test: ${{ steps.version.outputs.version }}"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
