@@ -1,12 +1,11 @@
-name: Test Release Notes
+name: Create Release on Master Push
 
 on:
   push:
-    branches: 
-      - master  # Replace with your actual branch name
+    branches: [ master ]  # Triggers on push to master branch
 
 jobs:
-  test-release:
+  create-release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -14,17 +13,24 @@ jobs:
         with:
           fetch-depth: 0
           
-      - name: Generate Release Notes (Dry Run)
-        id: generate-notes
+      - name: Get version from package.json
+        id: version
         run: |
-          # Simulate what GitHub would generate
-          echo "## Test Release Notes"
-          echo "### This is a test run on branch: ${{ github.ref }}"
-          echo "### Commit: ${{ github.sha }}"
-          echo "---"
-          echo "### Changes since last release:"
-          git log --oneline -10 --pretty=format:"- %s" || echo "No git history available"
-          echo ""
-          echo "**This is a test - no actual release was created**"
-          
-     
+          if [ -f "package.json" ]; then
+            VERSION=$(node -p "require('./package.json').version")
+          else
+            # Use date-based version if no package.json
+            VERSION=$(date +'%Y.%m.%d.%H%M%S')
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Release v${{ steps.version.outputs.version }}
+          generate_release_notes: true  # Auto-generate from commits
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
