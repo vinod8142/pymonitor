@@ -23,51 +23,50 @@ jobs:
           echo "👤 Merged by: ${{ github.event.pull_request.merged_by.login }}"
 
       - name: Auto Version
-        id: version
-        run: |
-          # Fetch all tags from remote
-          git fetch --tags
-          
-          # Get the latest tag or start with v1.0.0
-          if git describe --tags --abbrev=0 2>/dev/null; then
-            LAST_TAG=$(git describe --tags --abbrev=0)
-            echo "Last tag found: $LAST_TAG"
+          id: version
+          run: |
+            # Fetch all tags from remote
+            git fetch --tags
             
-            # Extract version numbers and increment patch
-            if [[ $LAST_TAG =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-              MAJOR=${BASH_REMATCH[1]}
-              MINOR=${BASH_REMATCH[2]} 
-              PATCH=${BASH_REMATCH[3]}
-              NEW_PATCH=$((PATCH + 1))
-              NEW_VERSION="v${MAJOR}.${MINOR}.${NEW_PATCH}"
-              echo "Incremented patch version: $NEW_VERSION"
+            # Get the latest tag or start with v1.0.0
+            if git describe --tags --abbrev=0 2>/dev/null; then
+              LAST_TAG=$(git describe --tags --abbrev=0)
+              echo "Last tag found: $LAST_TAG"
+            
+              # Extract version numbers and increment patch
+              if [[ $LAST_TAG =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+                MAJOR=${BASH_REMATCH[1]}
+                MINOR=${BASH_REMATCH[2]} 
+                PATCH=${BASH_REMATCH[3]}
+                NEW_PATCH=$((PATCH + 1))
+                NEW_VERSION="v${MAJOR}.${MINOR}.${NEW_PATCH}"
+                echo "Incremented patch version: $NEW_VERSION"
+              else
+                # If tag format is unexpected, start fresh
+                NEW_VERSION="v1.0.0"
+                echo "Unexpected tag format, starting with: $NEW_VERSION"
+              fi
             else
-              # If tag format is unexpected, start fresh
+              # No tags exist, start with v1.0.0
               NEW_VERSION="v1.0.0"
-              echo "Unexpected tag format, starting with: $NEW_VERSION"
+              echo "No existing tags, starting with: $NEW_VERSION"
             fi
-          else
-            # No tags exist, start with v1.0.0
-            NEW_VERSION="v1.0.0"
-            echo "No existing tags, starting with: $NEW_VERSION"
-          fi
-          
-          # Check if the new tag already exists remotely
-          if git ls-remote --tags origin | grep -q "refs/tags/$NEW_VERSION$"; then
-            echo "Tag $NEW_VERSION already exists remotely, incrementing again"
-            # If it exists, increment further
-            if [[ $NEW_VERSION =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-              MAJOR=${BASH_REMATCH[1]}
-              MINOR=${BASH_REMATCH[2]} 
-              PATCH=${BASH_REMATCH[3]}
-              NEW_PATCH=$((PATCH + 1))
-              NEW_VERSION="v${MAJOR}.${MINOR}.${NEW_PATCH}"
+            
+            # Check if the new tag already exists remotely
+            if git ls-remote --tags origin | grep -q "refs/tags/$NEW_VERSION$"; then
+              echo "Tag $NEW_VERSION already exists remotely, incrementing again"
+              # If it exists, increment further
+              if [[ $NEW_VERSION =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+                MAJOR=${BASH_REMATCH[1]}
+                MINOR=${BASH_REMATCH[2]} 
+                PATCH=${BASH_REMATCH[3]}
+                NEW_PATCH=$((PATCH + 1))
+                NEW_VERSION="v${MAJOR}.${MINOR}.${NEW_PATCH}"
+              fi
             fi
-          fi
-          
-          echo "Final version: $NEW_VERSION"
-          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-
+            
+            echo "Final version: $NEW_VERSION"
+            echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
       - name: Create Git Tag
         run: |
           git config user.email "action@github.com"
